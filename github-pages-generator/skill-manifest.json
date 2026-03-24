@@ -1,0 +1,190 @@
+{
+  "metadata": {
+    "id": "github-pages-generator",
+    "name": "GitHub Pages Generator",
+    "version": "1.0.0",
+    "description": "Generate production-ready GitHub Pages portfolio sites from repository URLs with interactive customization and intelligent auto-detection",
+    "author": "Kurt Mitchell",
+    "license": "MIT",
+    "created": "2024-03-23",
+    "lastUpdated": "2024-03-23",
+    "status": "production"
+  },
+  "compatibility": {
+    "minClaudeVersion": "3.5",
+    "supportedPlatforms": ["claude.ai", "Claude App"],
+    "requiredFeatures": ["web_search", "file_creation", "code_generation"]
+  },
+  "triggers": {
+    "explicit": [
+      "Create a portfolio site for my GitHub repo",
+      "Generate a GitHub Pages website from this repository",
+      "Make a portfolio website from my GitHub project",
+      "Build a showcase website for my GitHub repo",
+      "Create a professional site to showcase my code"
+    ],
+    "implicit": [
+      "how can I best showcase this project",
+      "make my GitHub work look professional",
+      "I want people to see what my project does",
+      "create documentation for my GitHub project visually"
+    ],
+    "interview": [
+      "portfolio for my GitHub projects",
+      "showcase my work to recruiters",
+      "impressive GitHub presence for interviews",
+      "interview preparation from my code projects"
+    ]
+  },
+  "capabilities": {
+    "projectTypeDetection": [
+      "TypeScript/Node.js",
+      ".NET/C#",
+      "Python/ML/Computer Vision",
+      "Full-Stack Web Applications"
+    ],
+    "designStyles": [
+      "Modern Minimal",
+      "Portfolio Heavy",
+      "Documentation Style"
+    ],
+    "features": [
+      "Interactive customization workflow",
+      "Intelligent project type auto-detection",
+      "Multi-page responsive design",
+      "GitHub Actions deployment automation",
+      "Performance optimization (Lighthouse 90+)",
+      "Accessibility compliance (WCAG AA)",
+      "Security scanning",
+      "Image optimization",
+      "Automatic sitemap generation"
+    ],
+    "outputFormats": [
+      "HTML5",
+      "CSS3",
+      "JavaScript",
+      "GitHub Actions YAML",
+      "Configuration JSON"
+    ]
+  },
+  "deliverables": {
+    "generatedFiles": {
+      "htmlPages": 5,
+      "stylesheets": 3,
+      "javascriptFiles": 2,
+      "configFiles": 4,
+      "documentationFiles": 1
+    },
+    "supportingMaterials": {
+      "guides": 4,
+      "examplePrompts": "10+",
+      "totalDocLines": "4500+"
+    },
+    "totalCodeGenerated": {
+      "perSite": "2200+ lines",
+      "totalPackage": "8000+ lines"
+    }
+  },
+  "qualityMetrics": {
+    "performance": {
+      "lighthouseScore": "90+",
+      "firstContentfulPaint": "<2.5s",
+      "largestContentfulPaint": "<4s"
+    },
+    "accessibility": {
+      "wcagCompliance": "AA",
+      "pa11yThreshold": "5 issues",
+      "colorContrast": "WCAG AA minimum"
+    },
+    "security": {
+      "vulnerability_scanning": true,
+      "dependencyChecking": true,
+      "htmlValidation": true
+    }
+  },
+  "dependencies": {
+    "external": [
+      {
+        "name": "Mermaid",
+        "version": "latest",
+        "type": "CDN",
+        "optional": true,
+        "description": "For diagram rendering (optional)"
+      }
+    ],
+    "internal": [
+      "Claude Code generation",
+      "Web search capability",
+      "File creation"
+    ]
+  },
+  "files": {
+    "core": [
+      "SKILL.md"
+    ],
+    "documentation": [
+      "OVERVIEW.md",
+      "EXAMPLE_PROMPTS.md",
+      "CUSTOMIZATION_GUIDE.md",
+      "DEPLOYMENT_AUTOMATION_GUIDE.md",
+      "README.md"
+    ],
+    "automation": [
+      ".github/workflows/deploy.yml",
+      ".lighthouserc.json",
+      ".pa11yci.json",
+      ".htmlvalidate.json"
+    ]
+  },
+  "installation": {
+    "method": "direct",
+    "steps": [
+      "1. Extract skill files to your skills directory",
+      "2. Ensure all supporting materials are included",
+      "3. Update Claude's skill registry with skill-manifest.json",
+      "4. Test by providing a GitHub repository URL"
+    ],
+    "location": "/mnt/skills/user/github-pages-generator"
+  },
+  "usage": {
+    "basicWorkflow": "User provides GitHub URL → Skill auto-detects project type → Interactive customization → Complete site generation → GitHub Actions deployment",
+    "estimatedTime": {
+      "generation": "5-10 minutes",
+      "deployment": "2-3 minutes",
+      "total": "10-15 minutes"
+    }
+  },
+  "support": {
+    "documentation": [
+      "OVERVIEW.md - Start here",
+      "EXAMPLE_PROMPTS.md - Find your use case",
+      "CUSTOMIZATION_GUIDE.md - Post-generation modifications",
+      "DEPLOYMENT_AUTOMATION_GUIDE.md - GitHub Actions setup"
+    ],
+    "troubleshooting": "See DEPLOYMENT_AUTOMATION_GUIDE.md Troubleshooting section"
+  },
+  "versioning": {
+    "currentVersion": "1.0.0",
+    "releaseDate": "2024-03-23",
+    "changelog": {
+      "1.0.0": [
+        "Initial production release",
+        "4 design styles (Modern Minimal, Portfolio Heavy, Documentation)",
+        "4 project type auto-detection",
+        "GitHub Actions deployment automation",
+        "Comprehensive documentation and examples",
+        "Performance, accessibility, and security validation"
+      ]
+    }
+  },
+  "community": {
+    "sharing": {
+      "allowRedistribution": true,
+      "license": "MIT",
+      "attribution": "Maintain author attribution",
+      "modifications": "Clearly mark modifications from original"
+    },
+    "feedback": "Suggestions and improvements welcome",
+    "reporting": "Report issues with specific repository and error details"
+  }
+}

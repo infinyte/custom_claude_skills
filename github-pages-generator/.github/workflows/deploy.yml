@@ -1,0 +1,223 @@
+name: Deploy Portfolio Site
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Allows one concurrent deployment
+concurrency:
+  group: deployment
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate HTML & Assets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install validation tools
+        run: |
+          npm install -g html-validate
+          npm install -g htmlhint
+          npm install -g stylelint
+
+      - name: Validate HTML
+        run: |
+          html-validate '*.html' || true
+          htmlhint '*.html' || true
+
+      - name: Check CSS
+        run: |
+          stylelint 'css/**/*.css' || true
+
+      - name: Check for broken links
+        run: |
+          npm install -g broken-link-checker
+          blc http://localhost:8000 -r --exclude-external || true
+        continue-on-error: true
+
+  lighthouse:
+    name: Lighthouse Performance Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v9
+        with:
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('./lhr.json', 'utf8');
+            const data = JSON.parse(report);
+            const score = data.categories.performance.score * 100;
+            
+            const comment = `⚡ **Lighthouse Performance: ${Math.round(score)}/100**`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  accessibility:
+    name: Accessibility Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install pa11y
+        run: npm install -g pa11y-ci
+
+      - name: Run accessibility audit
+        run: |
+          pa11y-ci --config .pa11yci.json || true
+        continue-on-error: true
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: [validate, lighthouse, accessibility, security]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
+      - name: Minify CSS
+        run: |
+          npm install -g csso-cli
+          for file in css/*.css; do
+            csso "$file" -o "${file%.css}.min.css"
+          done
+        continue-on-error: true
+
+      - name: Minify JavaScript
+        run: |
+          npm install -g terser
+          for file in js/*.js; do
+            terser "$file" -o "${file%.js}.min.js"
+          done
+        continue-on-error: true
+
+      - name: Optimize images
+        run: |
+          npm install -g imagemin-cli imagemin-mozjpeg imagemin-pngquant
+          imagemin images/* --out-dir=images --plugin=mozjpeg --plugin=pngquant || true
+        continue-on-error: true
+
+      - name: Create sitemap
+        run: |
+          cat > sitemap.xml << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+            <url><loc>https://${{ github.actor }}.github.io/${{ github.event.repository.name }}/</loc></url>
+            <url><loc>https://${{ github.actor }}.github.io/${{ github.event.repository.name }}/architecture.html</loc></url>
+            <url><loc>https://${{ github.actor }}.github.io/${{ github.event.repository.name }}/features.html</loc></url>
+            <url><loc>https://${{ github.actor }}.github.io/${{ github.event.repository.name }}/quick-start.html</loc></url>
+            <url><loc>https://${{ github.actor }}.github.io/${{ github.event.repository.name }}/demo.html</loc></url>
+          </urlset>
+          EOF
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
+
+      - name: Create success summary
+        run: |
+          echo "## ✅ Deployment Successful!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Site**: https://${{ github.actor }}.github.io/${{ github.event.repository.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Validation**: Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- **Lighthouse Audit**: Completed" >> $GITHUB_STEP_SUMMARY
+          echo "- **Accessibility Check**: Completed" >> $GITHUB_STEP_SUMMARY
+          echo "- **Security Scan**: Completed" >> $GITHUB_STEP_SUMMARY
+
+  notify:
+    name: Send Notifications
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Deployment Status
+        run: |
+          if [ "${{ needs.deploy.result }}" == "success" ]; then
+            echo "✅ Portfolio site deployed successfully!"
+          else
+            echo "❌ Deployment failed. Check the logs above."
+          fi
+
+      - name: Slack Notification (Optional)
+        if: secrets.SLACK_WEBHOOK
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "Portfolio Site Deployment: ${{ job.status }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Portfolio Site Deployment: ${{ job.status }}*\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

@@ -1,0 +1,37 @@
+{
+  "extends": ["html-validate:recommended"],
+  "rules": {
+    "attr-boolean-style": ["error", { "style": "empty" }],
+    "close-attr-newline": "off",
+    "close-tag-newline": "off",
+    "doctype-html": "error",
+    "element-case": ["error", { "style": "lowercase" }],
+    "element-name": "error",
+    "heading-level": "error",
+    "id-pattern": ["error", { "pattern": "^[a-z]+[a-z0-9-]*$" }],
+    "input-attributes": "error",
+    "input-missing-label": "off",
+    "no-conditional-comment": "error",
+    "no-deprecated-attr": "error",
+    "no-dup-attr": "error",
+    "no-dup-class": "error",
+    "no-dup-id": "error",
+    "no-implicit-button-type": "off",
+    "no-inline-style": "off",
+    "no-missing-references": "error",
+    "no-raw-characters": "error",
+    "no-self-closing": ["error", { "void": true }],
+    "no-trailing-whitespace": "error",
+    "no-unknown-attributes": "off",
+    "no-unknown-elements": "off",
+    "prefer-tbody": "off",
+    "script-type": "error",
+    "svg-focusable": "error",
+    "text-nodes": "off",
+    "valid-autocomplete": "error",
+    "void-style": ["error", { "style": "omit" }]
+  },
+  "elements": [
+    "html5"
+  ]
+}

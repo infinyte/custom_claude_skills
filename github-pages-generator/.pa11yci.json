@@ -1,0 +1,30 @@
+{
+  "runners": [
+    "axe",
+    "htmlcs"
+  ],
+  "standard": "WCAG2AA",
+  "timeout": 10000,
+  "wait": 1000,
+  "chromeLaunchConfig": {
+    "ignoreHTTPSErrors": true,
+    "headless": true,
+    "args": [
+      "--no-sandbox",
+      "--disable-setuid-sandbox"
+    ]
+  },
+  "urls": [
+    "index.html",
+    "architecture.html",
+    "features.html",
+    "quick-start.html",
+    "demo.html"
+  ],
+  "threshold": 5,
+  "reporters": [
+    "cli",
+    "csv",
+    "json"
+  ]
+}

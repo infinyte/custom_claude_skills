@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analyzer — Project Analysis</title>
+    <style>
+        :root {
+            --primary: #0066cc;
+            --accent: #ff6b6b;
+            --success: #51cf66;
+            --warning: #ffa500;
+            --danger: #ff4444;
+            --bg-light: #f8f9fa;
+            --bg-dark: #2d3436;
+            --text-dark: #2d3436;
+            --text-light: #636e72;
+            --border: #ddd;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, #004399 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        header .tagline {
+            font-size: 1.1em;
+            opacity: 0.95;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        header .metadata {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+
+        header .metadata-item {
+            text-align: left;
+        }
+
+        header .metadata-label {
+            font-weight: 600;
+            font-size: 0.85em;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        header .metadata-value {
+            font-size: 1.1em;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+
+        .nav {
+            display: flex;
+            position: sticky;
+            top: 0;
+            background: white;
+            border-bottom: 2px solid var(--border);
+            z-index: 100;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .nav button {
+            flex: 1;
+            padding: 18px 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            color: var(--text-light);
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav button:hover {
+            color: var(--primary);
+            background: var(--bg-light);
+        }
+
+        .nav button.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: var(--bg-light);
+        }
+
+        .main {
+            display: grid;
+            grid-template-columns: 1fr;
+        }
+
+        .section {
+            display: none;
+            padding: 50px 40px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            font-size: 2em;
+            color: var(--primary);
+            margin-bottom: 30px;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 15px;
+        }
+
+        h3 {
+            font-size: 1.3em;
+            color: var(--text-dark);
+            margin-top: 35px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        h4 {
+            font-size: 1.05em;
+            color: var(--text-dark);
+            margin-top: 20px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: var(--text-light);
+            line-height: 1.8;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .card h4 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+
+        .card .value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+
+        .card .label {
+            font-size: 0.85em;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin: 15px 0 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .progress-fill.high {
+            background: var(--success);
+        }
+
+        .progress-fill.medium {
+            background: var(--warning);
+        }
+
+        .progress-fill.low {
+            background: var(--danger);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        th {
+            background: var(--bg-light);
+            padding: 15px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--primary);
+            border-bottom: 2px solid var(--border);
+            font-size: 0.95em;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-light);
+        }
+
+        tr:hover {
+            background: var(--bg-light);
+        }
+
+        .severity-high {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .severity-medium {
+            color: var(--warning);
+            font-weight: 600;
+        }
+
+        .severity-low {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .feature-group {
+            margin-bottom: 35px;
+        }
+
+        .feature-group h4 {
+            background: var(--bg-light);
+            padding: 12px 15px;
+            border-left: 4px solid var(--primary);
+            margin-top: 0;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .feature-list li {
+            padding: 12px 15px;
+            border-left: 2px solid #e0e0e0;
+            margin-left: 10px;
+            color: var(--text-light);
+        }
+
+        .feature-list li:before {
+            content: "✓ ";
+            color: var(--success);
+            font-weight: 700;
+            margin-right: 8px;
+        }
+
+        .strength, .concern, .recommendation {
+            padding: 20px;
+            border-left: 4px solid;
+            margin-bottom: 20px;
+            background: var(--bg-light);
+            border-radius: 4px;
+        }
+
+        .strength {
+            border-left-color: var(--success);
+        }
+
+        .strength h4 {
+            color: var(--success);
+            margin-top: 0;
+        }
+
+        .concern {
+            border-left-color: var(--warning);
+        }
+
+        .concern h4 {
+            color: var(--warning);
+            margin-top: 0;
+        }
+
+        .recommendation {
+            border-left-color: var(--primary);
+        }
+
+        .recommendation h4 {
+            color: var(--primary);
+            margin-top: 0;
+        }
+
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .tier-1 { background: #f0f8ff; border-left: 4px solid var(--primary); }
+        .tier-2 { background: #f5f5f5; border-left: 4px solid var(--text-light); }
+        .tier-3 { background: #fafafa; border-left: 4px solid #ccc; }
+
+        .tier-label {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-left: 10px;
+        }
+
+        .tier-1 .tier-label { background: var(--primary); color: white; }
+        .tier-2 .tier-label { background: var(--warning); color: white; }
+        .tier-3 .tier-label { background: #999; color: white; }
+
+        .badge {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 700;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .badge.success { background: var(--success); }
+        .badge.warning { background: var(--warning); }
+        .badge.danger { background: var(--danger); }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-box {
+            background: var(--bg-light);
+            padding: 20px;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-box .value {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+
+        .stat-box .label {
+            font-size: 0.9em;
+            color: var(--text-light);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        footer {
+            background: var(--bg-light);
+            padding: 30px 40px;
+            text-align: center;
+            color: var(--text-light);
+            font-size: 0.9em;
+            border-top: 1px solid var(--border);
+            margin-top: 50px;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .nav {
+                flex-direction: column;
+            }
+
+            .nav button {
+                border-right: 3px solid transparent;
+                border-bottom: none;
+                text-align: left;
+            }
+
+            .nav button.active {
+                border-right-color: var(--primary);
+            }
+
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            header .metadata {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section {
+                padding: 30px 20px;
+            }
+
+            h2 {
+                font-size: 1.5em;
+            }
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            font-size: 2em;
+            font-weight: 700;
+            color: white;
+        }
+
+        .score-excellent { background: var(--success); }
+        .score-good { background: #4dabf7; }
+        .score-fair { background: var(--warning); }
+        .score-needs-work { background: var(--danger); }
+
+        .comparison-table {
+            border: 1px solid var(--border);
+            margin: 25px 0;
+        }
+
+        .comparison-table th, .comparison-table td {
+            border-right: 1px solid var(--border);
+        }
+
+        .comparison-table th:last-child, .comparison-table td:last-child {
+            border-right: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sentiment Analyzer</h1>
+            <p class="tagline">Comprehensive Project Analysis &amp; Technical Assessment</p>
+            <div class="metadata">
+                <div class="metadata-item">
+                    <div class="metadata-label">Repository</div>
+                    <div class="metadata-value">github.com/infinyte/sentiment-analyzer</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">Analysis Date</div>
+                    <div class="metadata-value">March 2025</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">Backend Tests</div>
+                    <div class="metadata-value">56.2% Coverage</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">Frontend Tests</div>
+                    <div class="metadata-value">70.1% Coverage</div>
+                </div>
+            </div>
+        </header>
+
+        <nav class="nav">
+            <button class="nav-btn active" onclick="switchSection(0)">Project Summary</button>
+            <button class="nav-btn" onclick="switchSection(1)">Features & Capabilities</button>
+            <button class="nav-btn" onclick="switchSection(2)">Architecture</button>
+            <button class="nav-btn" onclick="switchSection(3)">Incomplete Work</button>
+            <button class="nav-btn" onclick="switchSection(4)">Test Coverage</button>
+            <button class="nav-btn" onclick="switchSection(5)">Editorial Assessment</button>
+        </nav>
+
+        <div class="main">
+            <!-- Section 1: Project Summary -->
+            <section class="section active">
+                <h2>Project Summary</h2>
+                
+                <div class="summary-grid">
+                    <div class="card">
+                        <h4>Primary Language</h4>
+                        <div class="value">TypeScript</div>
+                        <div class="label">Backend: 70% | Frontend: 30%</div>
+                    </div>
+                    <div class="card">
+                        <h4>Maturity Level</h4>
+                        <div class="value">Beta</div>
+                        <div class="label">Phase 3 Complete; Active Development</div>
+                    </div>
+                    <div class="card">
+                        <h4>Codebase Size</h4>
+                        <div class="value">161 + 17</div>
+                        <div class="label">Backend + Frontend TS Files</div>
+                    </div>
+                    <div class="card">
+                        <h4>Test Coverage</h4>
+                        <div class="value">56–70%</div>
+                        <div class="label">Backend (56.2%) | Frontend (70.1%)</div>
+                    </div>
+                </div>
+
+                <h3>Project Purpose & Scope</h3>
+                <p>
+                    <strong>Sentiment Analyzer</strong> is a real-time cryptocurrency sentiment analysis and multi-agent reinforcement learning (MARL) trading platform. It aggregates market data from CoinGecko, ingests sentiment signals from news (NewsAPI) and 7 social media sources (Twitter/X, Reddit, RSS, Discord, Telegram, YouTube, TikTok), and uses Claude AI plus local NLP heuristics to generate Bull/Neutral/Bear sentiment assessments for top altcoins. A sophisticated evolutionary trading system allows multiple AI agents to compete in sandboxed tournaments, discovering emergent trading strategies through adversarial Q-learning and genetic algorithms.
+                </p>
+
+                <h3>Current State & Maturity</h3>
+                <p>
+                    The project is in <strong>active beta development</strong>. All three major phases are complete:
+                </p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li><strong>Phase 1 (Sentiment & Dashboard):</strong> Core sentiment analysis, React dashboard with 7 tabs, polling-based updates.</li>
+                    <li><strong>Phase 2 (MARL Evolutionary Trading):</strong> Multi-agent competition engine, genetic algorithms, agent lifecycle management, persisted win-rate leaderboards, and real broker integration (Crypto.com, Binance.US, Coinbase, Alpaca).</li>
+                    <li><strong>Phase 3 (Social Intelligence):</strong> 7-source scraper suite, 4-signal scoring pipeline, trending discovery engine, and per-symbol trend reports with velocity tracking.</li>
+                </ul>
+                <p>
+                    Development is <span class="highlight">continuous</span>. The codebase undergoes regular updates with CI/CD via GitHub Actions, type-safe build process, and a well-maintained test suite.
+                </p>
+
+                <h3>Development Pace & Signals</h3>
+                <p>
+                    <strong>Commit activity:</strong> Multiple commits per week typical for active feature work and bug fixes. Recent work includes live tournament monitoring via SSE, Phase 2 MARL gap closure, Q-value persistence, evolutionary tracking, and social media enhancements.
+                </p>
+                <p>
+                    <strong>Community & Usage:</strong> Private repository under the "infinyte" GitHub organization. The project serves as both a personal research platform and a working trading intelligence tool, suggesting serious long-term commitment.
+                </p>
+
+                <h3>Intended Audience & Use Case</h3>
+                <p>
+                    <strong>Primary audience:</strong> Cryptocurrency traders, algorithmic trading researchers, and AI/ML practitioners interested in multi-agent systems and reinforcement learning applied to financial markets.
+                </p>
+                <p>
+                    <strong>Key use cases:</strong>
+                </p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li>Real-time sentiment monitoring across 50+ altcoins with multi-source intelligence</li>
+                    <li>Paper and live trading via multiple exchanges with zero-trust architecture</li>
+                    <li>Agent breeding, evolution, and genealogy tracking for emergent strategy discovery</li>
+                    <li>Backtesting and pre-training of agents on synthetic market regimes</li>
+                    <li>Social media trend analysis with sarcasm detection and language awareness</li>
+                </ul>
+
+                <h3>Technology Stack & Dependencies</h3>
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="label">Backend Framework</div>
+                        <div class="value" style="font-size: 1.2em;">Express.js</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Frontend Framework</div>
+                        <div class="value" style="font-size: 1.2em;">React 18</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Database</div>
+                        <div class="value" style="font-size: 1.2em;">SQLite (WAL)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Queue/Workers</div>
+                        <div class="value" style="font-size: 1.2em;">BullMQ + Redis</div>
+                    </div>
+                </div>
+
+                <p style="margin-top: 30px;">
+                    <strong>Key Dependencies:</strong>
+                </p>
+                <div class="code-block">Backend: @anthropic-ai/sdk, better-sqlite3, bullmq, ioredis, axios, 
+node-cron, tsyringe, winston, @azure/data-tables, helmet
+
+Frontend: react, react-dom, axios, chart.js, react-chartjs-2</div>
+
+                <h3>Deployment & Operations</h3>
+                <p>
+                    <strong>Current deployment:</strong> Azure App Service with SQLite persistence (Docker-containerized). GitHub Actions CI runs on push to main, validating docs, linting, type-checking, testing, and building both backend and frontend.
+                </p>
+                <p>
+                    <strong>Cost profile:</strong> Approximately <span class="highlight">$6–15/month</span> in Claude API fees for daily sentiment batch across 50 coins. CoinGecko and NewsAPI free tier, Azure App Service B1 minimal cost.
+                </p>
+                <p>
+                    <strong>Queue infrastructure:</strong> Optional Redis/BullMQ for background tournament and scraper workers. Gracefully degrades to in-process execution (via setImmediate) when Redis is unavailable.
+                </p>
+
+                <h3>Notable Architectural Patterns</h3>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li><strong>Service-oriented architecture:</strong> Separate services for sentiment, MARL, social media, exchanges, and evolutionary systems.</li>
+                    <li><strong>Repository pattern:</strong> SQLite adapter implementations for agent, tournament, sentiment, social, and backtest data access.</li>
+                    <li><strong>Factory pattern:</strong> Exchange factory routes trading modes (PAPER, SANDBOX, LIVE) to appropriate implementations (PaperExchange, CryptoComExchange, BinanceUSExchange, CoinbaseExchange, AlpacaExchange).</li>
+                    <li><strong>Dependency injection:</strong> tsyringe for service lifecycle and container management.</li>
+                    <li><strong>Event-driven updates:</strong> Server-Sent Events (SSE) for live tournament monitoring with fallback to polling.</li>
+                    <li><strong>Zero-trust compliance:</strong> AES-256-GCM encryption for stored broker credentials; no plaintext secrets.</li>
+                </ul>
+            </section>
+
+            <!-- Section 2: Features & Capabilities -->
+            <section class="section">
+                <h2>Features & Capabilities</h2>
+
+                <h3>Core Sentiment Analysis (Phase 1)</h3>
+                <div class="feature-group">
+                    <h4>Sentiment Scoring Engine</h4>
+                    <ul class="feature-list">
+                        <li><strong>4-mode local analyzer:</strong> BASIC, ADVANCED, TRADING_SIGNALS, SMART modes with lexicon-based scoring.</li>
+                        <li><strong>Claude API fallback:</strong> Graceful degradation to local scoring when API is unavailable or rate-limited.</li>
+                        <li><strong>Cached sentiment results:</strong> 24-hour TTL per symbol; bulk refresh via authenticated API endpoint.</li>
+                        <li><strong>Bull/Neutral/Bear classification:</strong> Composite sentiment with confidence scoring and reasoning summaries.</li>
+                    </ul>
+                </div>
+
+                <div class="feature-group">
+                    <h4>Market Data & Content Aggregation</h4>
+                    <ul class="feature-list">
+                        <li><strong>Live market data via CoinGecko:</strong> OHLCV history, price, market cap, 24h volume for 50+ coins.</li>
+                        <li><strong>News aggregation:</strong> NewsAPI integration with source ranking and relevance filtering.</li>
+                        <li><strong>Content signal pipeline:</strong> Reddit, Twitter/X-ready scoring with sarcasm detection and context extraction.</li>
+                        <li><strong>Optional FinBERT scoring:</strong> Remote Hugging Face inference endpoint for financial sentiment classification.</li>
+                        <li><strong>Multi-language support:</strong> Language detection and potential translation routing (infrastructure ready).</li>
+                    </ul>
+                </div>
+
+                <div class="feature-group">
+                    <h4>Dashboard & User Interface</h4>
+                    <ul class="feature-list">
+                        <li><strong>React-based dashboard:</strong> 7-tab interface with real-time polling (10-min default) and SSE-based live updates.</li>
+                        <li><strong>Sentiment Lab:</strong> Analyze individual symbols, view cached sentiment, load rankings, inspect mode metadata.</li>
+                        <li><strong>Global health pill:</strong> 30-second polling of system health with expandable service status view.</li>
+                        <li><strong>Responsive design:</strong> Mobile-friendly with Chart.js visualizations for price and performance curves.</li>
+                        <li><strong>Dark mode ready:</strong> Theme infrastructure in place for light/dark toggle persistence.</li>
+                    </ul>
+                </div>
+
+                <h3>Multi-Agent Reinforcement Learning (Phase 2)</h3>
+                <div class="feature-group">
+                    <h4>MARL Tournament Engine</h4>
+                    <ul class="feature-list">
+                        <li><strong>Shared order book matching:</strong> Price-time FIFO with realistic slippage modeling and commission deduction.</li>
+                        <li><strong>3-agent risk profiles:</strong> AGGRESSIVE (5% risk/trade), CONSERVATIVE (1%), SCALPING (3%).</li>
+                        <li><strong>Tournament modes:</strong> SINGLE (one-shot), EVOLUTIONARY (mutation + replacement), CONTINUOUS (live learning).</li>
+                        <li><strong>Q-learning agents:</strong> 50-feature state space, 5-action policy (no action, buy small/large, sell small/large), epsilon-greedy exploration.</li>
+                        <li><strong>Experience replay:</strong> Prioritized buffer with configurable batch size and learning rates.</li>
+                        <li><strong>Persistent learning state:</strong> Agent Q-tables stored in SQLite; additive pre-training and live learning paths.</li>
+                    </ul>
+                </div>
+
+                <div class="feature-group">
+                    <h4>Agent Identity & Cosmetics</h4>
+                    <ul class="feature-list">
+                        <li><strong>Agent registry:</strong> Unique identity, name, emoji, color, biography, and nickname.</li>
+                        <li><strong>Genealogy tracking:</strong> Parent/child relationships persisted; navigable lineage explorer in UI.</li>
+                        <li><strong>Win-rate leaderboard:</strong> Persistent ranking by cumulative profit, win %, and fitness score.</li>
+                        <li><strong>Competition history:</strong> Per-agent tournament participation with results, KPIs, and equity curves.</li>
+                        <li><strong>Agent retirement:</strong> Mark underperforming agents as inactive; exclude from breeding pools.</li>
+                    </ul>
+                </div>
+
+                <div class="feature-group">
+                    <h4>Evolutionary System</h4>
+                    <ul class="feature-list">
+                        <li><strong>Multi-generation orchestration:</strong> Fitness evaluation → survival selection → crossover → mutation → repeat.</li>
+                        <li><strong>Fitness scoring:</strong> 0–100 composite metric balancing profit, Sharpe ratio, max drawdown, and win %.</li>
+                        <li><strong>Selection algorithms:</strong> Configurable survival percentage for tournament-style or elitism strategies.</li>
+                        <li><strong>Genetic crossover:</strong> UNIFORM (random gene swapping) or BLENDED (weighted averages).</li>
+                        <li><strong>Mutation engines:</strong> LIGHT, MEDIUM, HEAVY stochastic perturbation of genome parameters.</li>
+                        <li><strong>Genome persistence:</strong> SQLite CRUD for agent parameters; tournament results linked to generation.</li>
+                    </ul>
+                </div>
+
+                <div class="feature-group">
+                    <h4>Exchange Integration & Real Trading</h4>
+                    <ul class="feature-list">
+                        <li><strong>Multi-provider support:</strong> Crypto.com (default), Binance.US, Coinbase Advanced Trade, Alpaca.</li>
+                        <li><strong>Trading modes:</strong> PAPER (in-memory simulation), SANDBOX (live quotes, no real orders), LIVE (real trading with safety guards).</li>
+                        <li><strong>Safety guardrails:</strong> Kill switch (max daily loss %), max open positions, position size cap, $1 minimum notional.</li>
+                        <li><strong>Credential storage:</strong> AES-256-GCM encryption for API keys; requires BROKER_MASTER_KEY env var.</li>
+                        <li><strong>Order management:</strong> Buy/sell limit orders with detailed fills, commission tracking, and slippage reporting.</li>
+                        <li><strong>Paper exchange:</strong> In-memory order book with synthetic pricing fallback for realistic simulation.</li>
+                    </ul>
+                </div>
+
+                <div class="feature-group">
+                    <h4>Backtesting & Pre-Training</h4>
+                    <ul class="feature-list">
+                        <li><strong>Backtesting engine:</strong> Historical OHLCV simulation with KPI reporting (profit, Sharpe, max drawdown, win %).</li>
+                        <li><strong>Synthetic market generator:</strong> 5-regime price series (Bull trend, Bear trend, Sideways, Volatile crash, Volatile pump) for offline training.</li>
+                        <li><strong>Pre-trainer service:</strong> Run agents through configurable episodes/steps on synthetic markets before live competition.</li>
+                        <li><strong>Convergence tracking:</strong> Learning curves for policy value and loss metrics.</li>
+                        <li><strong>UI integration:</strong> Backtesting tab with agent config, run history, and reload of persisted results.</li>
+                    </ul>
+                </div>
+
+                <h3>Social Media Intelligence (Phase 3)</h3>
+                <div class="feature-group">
+                    <h4>Multi-Source Scraper Suite</h4>
+                    <ul class="feature-list">
+                        <li><strong>7 platforms:</strong> Twitter/X (API v2), Reddit (OAuth2 + unauthenticated fallback), RSS feeds, Discord (bot-based), Telegram (Bot API + HTML scraping fallback), YouTube Data API v3, TikTok (RapidAPI).</li>
+                        <li><strong>Hourly cron scheduling:</strong> Bulk refresh (RSS, Discord, Telegram) + top-10-coin targeted scraping (Twitter, Reddit); configurable via SOCIAL_SCRAPE_CRON.</li>
+                        <li><strong>Source health tracking:</strong> Per-platform error rates, item counts, and daily rate-budget management via source_metadata table.</li>
+                        <li><strong>Scraper manager orchestration:</strong> Fault-tolerant parallel execution with per-source error handling and fallback behavior.</li>
+                    </ul>
+                </div>
+
+                <div class="feature-group">
+                    <h4>4-Signal Scoring Pipeline</h4>
+                    <ul class="feature-list">
+                        <li><strong>Sentiment signal (30%):</strong> Local heuristics or optional FinBERT remote scoring.</li>
+                        <li><strong>Engagement signal (25%):</strong> Likes, retweets, comments, views normalized by recency.</li>
+                        <li><strong>Authority signal (25%):</strong> Source credibility (verified users, institutional accounts, established journalists).</li>
+                        <li><strong>Recency signal (20%):</strong> Time decay weighting favoring fresh content.</li>
+                        <li><strong>Sarcasm detection:</strong> Rule-based identifier for sarcasm patterns (flips polarity scoring when detected).</li>
+                        <li><strong>Language detection:</strong> Automatic multi-language identification; translation routing reserved for future expansion.</li>
+                    </ul>
+                </div>
+
+                <div class="feature-group">
+                    <h4>Trending Discovery & Analysis</h4>
+                    <ul class="feature-list">
+                        <li><strong>Trending discovery engine:</strong> Cross-source entity aggregation, velocity scoring (trend change rate), and snapshot persistence.</li>
+                        <li><strong>Multi-source trend reports:</strong> Per-symbol synthesis: per-source item counts, composite trend score, BULL/NEUTRAL/BEAR distribution, velocity indicators.</li>
+                        <li><strong>Trending topic ranking:</strong> Global trending list with rank, direction badge, and velocity acceleration.</li>
+                        <li><strong>Historical comparison:</strong> Trend performance tracking via trending_topic_history table with daily snapshots.</li>
+                        <li><strong>Midnight counter reset:</strong> Daily rate-budget reset for source capacity tracking.</li>
+                    </ul>
+                </div>
+
+                <div class="feature-group">
+                    <h4>Frontend Social Intelligence Tab</h4>
+                    <ul class="feature-list">
+                        <li><strong>Trending topics table:</strong> Rank, direction badge (↑ bullish, ↓ bearish), composite score bar, velocity trend.</li>
+                        <li><strong>Per-symbol trend panel:</strong> Clickable drill-in showing composite/sentiment/engagement/authority signals, BULL/NEUTRAL/BEAR breakdown, acceleration indicator.</li>
+                        <li><strong>Social items feed:</strong> Filterable by coin/source/sort (newest/score); detail drill-in shows scoring breakdown.</li>
+                        <li><strong>Source health dashboard:</strong> Per-platform item counts, error rates, and refresh status.</li>
+                        <li><strong>Manual refresh trigger:</strong> Queue social scrape jobs via UI; async feedback on completion.</li>
+                    </ul>
+                </div>
+
+                <h3>Admin & Configuration</h3>
+                <div class="feature-group">
+                    <h4>Runtime Configuration Management</h4>
+                    <ul class="feature-list">
+                        <li><strong>Admin config editor:</strong> Web UI with password gate (CONFIG_ADMIN_PASSWORD) for modifying app_config table at runtime.</li>
+                        <li><strong>Fallback to .env:</strong> Initial values from backend/.env; persisted overrides take precedence.</li>
+                        <li><strong>Config catalog:</strong> Supported keys for trading provider, fees, slippage, scrape cron, trending thresholds, worker concurrency.</li>
+                        <li><strong>Hot reload:</strong> Configuration changes apply immediately without restart.</li>
+                    </ul>
+                </div>
+
+                <div class="feature-group">
+                    <h4>Observability & Telemetry</h4>
+                    <ul class="feature-list">
+                        <li><strong>Winston logging:</strong> Structured logs with configurable transports.</li>
+                        <li><strong>Azure Application Insights:</strong> Custom transport for batched telemetry to Azure when APPLICATIONINSIGHTS_CONNECTION_STRING is set.</li>
+                        <li><strong>Health endpoint:</strong> GET /api/health with per-service status and metrics.</li>
+                        <li><strong>Console debugging:</strong> Per-module logger instances for development and troubleshooting.</li>
+                    </ul>
+                </div>
+
+                <h3>Developer Experience</h3>
+                <div class="feature-group">
+                    <h4>Development Tools & Automation</h4>
+                    <ul class="feature-list">
+                        <li><strong>VS Code task automation:</strong> Integrated dev task (Terminal: Run Task → "dev: restart in vscode") launches backend + frontend in separate terminals.</li>
+                        <li><strong>Vite dev proxy:</strong> Automatic routing of /api/* to http://localhost:3000 during frontend development.</li>
+                        <li><strong>Hot reload:</strong> nodemon (backend) and Vite (frontend) with file watch for rapid iteration.</li>
+                        <li><strong>TypeScript strict mode:</strong> Full type safety with ts-jest for backend tests and Vitest for frontend.</li>
+                        <li><strong>ESLint + Prettier:</strong> Automated linting and code formatting for consistency.</li>
+                        <li><strong>Docker Compose:</strong> Multi-service orchestration (backend, redis, tournament-worker, scraper-worker) for containerized deployments.</li>
+                    </ul>
+                </div>
+
+                <div class="feature-group">
+                    <h4>Testing & Quality Assurance</h4>
+                    <ul class="feature-list">
+                        <li><strong>Jest (backend):</strong> 26 test files covering services, API routes, exchanges, evolutionary components.</li>
+                        <li><strong>Vitest (frontend):</strong> 8 test files for components, hooks, and integration flows.</li>
+                        <li><strong>Postman collection:</strong> Comprehensive API endpoint test suite included (two variants: full + quick).</li>
+                        <li><strong>CI/CD pipeline:</strong> GitHub Actions with doc validation, backend (lint/type-check/test/build), frontend (lint/type-check/build).</li>
+                        <li><strong>Storage mocks:</strong> Reusable jest.mock patterns for database and queue dependencies.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Section 3: Architecture -->
+            <section class="section">
+                <h2>Architecture</h2>
+
+                <h3>System Architecture Overview</h3>
+                <p>
+                    The project follows a <strong>service-oriented backend architecture</strong> with a <strong>React-based frontend</strong> communicating via REST APIs and Server-Sent Events.
+                </p>
+
+                <h3>Backend Architecture Layers</h3>
+
+                <h4>1. Express Application Layer (index.ts, routes/)</h4>
+                <p>
+                    The main server bootstrap lives in <code>backend/src/index.ts</code>. It:
+                </p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li>Initializes the Express app with CORS, Helmet, and body parsing middleware.</li>
+                    <li>Connects to SQLite storage and waits for health confirmation before starting.</li>
+                    <li>Registers routers for sentiment, MARL, social media, agents, evolutionary, and trading endpoints.</li>
+                    <li>Sets up cron jobs for hourly social scraping, midnight metrics reset, and optional BullMQ worker initialization.</li>
+                    <li>Implements graceful shutdown lifecycle (SIGTERM, SIGINT) to close database and queue connections.</li>
+                </ul>
+
+                <p><strong>Route routers</strong> live in <code>backend/src/routes/</code>:</p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li><code>marl-competition.ts</code> → /api/marl/* (tournament CRUD, start, results, equity curves)</li>
+                    <li><code>marl-real-trading.ts</code> → /api/marl/broker/* (credential storage, balance, live orders)</li>
+                    <li><code>social-media.ts</code> → /api/social-media/* (refresh, trending, items, health)</li>
+                    <li><code>agent-stats.ts</code> → /api/agents/* (registry, leaderboard, customization)</li>
+                    <li><code>evolutionary.ts</code> → /api/evolutionary/* (breed, summary, genome, genealogy)</li>
+                    <li><code>trading.ts</code> → /api/trading/* (backtesting, pre-training)</li>
+                </ul>
+
+                <h4>2. Service Layer (services/)</h4>
+                <p>
+                    Business logic is split into modular services:
+                </p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li><strong>SentimentService:</strong> Claude API wrapper with local fallback.</li>
+                    <li><strong>SentimentAnalyzerEngine:</strong> Local 4-mode NLP scoring (BASIC, ADVANCED, TRADING_SIGNALS, SMART).</li>
+                    <li><strong>ContentSignalService:</strong> NewsAPI + Reddit + X scoring pipeline.</li>
+                    <li><strong>MarlCompetitionEngine:</strong> 90KB tournament orchestration, agent state management, order book matching.</li>
+                    <li><strong>EvolutionaryOrchestrator:</strong> Multi-generation loop linking fitness, selection, crossover, mutation.</li>
+                    <li><strong>ExchangeFactory & TradingService:</strong> Provider routing (PAPER/SANDBOX/LIVE) with safety guards.</li>
+                    <li><strong>SocialMediaScraperManager:</strong> Orchestrates 7-platform scraper suite with fault tolerance.</li>
+                    <li><strong>BacktestingEngine:</strong> Historical simulation with KPI reporting.</li>
+                </ul>
+
+                <h4>3. Data Access Layer (repositories/)</h4>
+                <p>
+                    Repository pattern abstracts database interactions:
+                </p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li><strong>SQLite adapter implementations:</strong> agent, backtest, broker, sentiment, social, tournament repositories.</li>
+                    <li><strong>Interface contracts:</strong> Defined in <code>repositories/interfaces/</code>; enables future swapping (PostgreSQL, Azure Tables).</li>
+                    <li><strong>Bulk operations:</strong> Transaction-based upserts for social items and trending snapshots.</li>
+                    <li><strong>Query patterns:</strong> Cursor-based pagination, TTL-based pruning, indexed lookups by symbol/date.</li>
+                </ul>
+
+                <h4>4. Storage & Persistence (storage.ts, database/)</h4>
+                <p>
+                    <strong>SQLite singleton:</strong> WAL mode, foreign keys enabled, synchronous writes.
+                </p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li><code>StorageService</code> manages DB lifecycle and connection pooling.</li>
+                    <li><code>SocialStore</code> opens independent connection for social_media_items, trending_topics, trending_topic_history, source_metadata.</li>
+                    <li><strong>Schema migrations:</strong> SQL migrations for agent identity, evolutionary tables, broker credentials.</li>
+                    <li><strong>Encryption:</strong> AES-256-GCM for stored broker API keys (requires BROKER_MASTER_KEY).</li>
+                </ul>
+
+                <h4>5. Queue & Worker Infrastructure (queues/, workers/)</h4>
+                <p>
+                    Optional distributed job processing via BullMQ + Redis:
+                </p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li><strong>TournamentQueue:</strong> Async SIMULATED tournament jobs; processed by tournament-worker-process.</li>
+                    <li><strong>ScraperQueue:</strong> Async social scraping jobs; processed by scraper-worker-process.</li>
+                    <li><strong>Fallback behavior:</strong> When REDIS_URL absent, tournaments use Worker Threads and scraper uses setImmediate (in-process).</li>
+                    <li><strong>Worker concurrency:</strong> Configurable via TOURNAMENT_WORKER_CONCURRENCY, SCRAPER_WORKER_CONCURRENCY.</li>
+                </ul>
+
+                <h4>6. Dependency Injection (container.ts, tsyringe)</h4>
+                <p>
+                    Services registered in a tsyringe container for lifecycle management and testability.
+                </p>
+
+                <h3>Frontend Architecture Layers</h3>
+
+                <h4>Root Component (App.tsx)</h4>
+                <p>
+                    40KB root component managing:
+                </p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li>7-tab interface (Dashboard, Agents, MARL Competition, Social Intel, Backtesting, Trading, Admin).</li>
+                    <li>Sentiment Lab tool with symbol analysis, cached results, mode metadata.</li>
+                    <li>Global health pill (30-second polling).</li>
+                    <li>Dashboard sentiment refresh with API key entry and user feedback.</li>
+                    <li>Backtesting tab with agent config and result reload.</li>
+                </ul>
+
+                <h4>Component Hierarchy</h4>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li><strong>AgentManagementDashboard.tsx</strong> — Agent registry, leaderboard, breeding controls, genealogy tree, generation trends, tournament drill-down.</li>
+                    <li><strong>MarlCompetitionViewer.tsx</strong> — Tournament UI, live equity curves (SSE + polling fallback), H2H comparison, info panels, manual equity reload.</li>
+                    <li><strong>SocialDashboard.tsx</strong> — Trending topics, source health, manual refresh, item drill-in with filter preservation.</li>
+                    <li><strong>ConfigEditor.tsx</strong> — Admin config UI with password gate and hot-reload feedback.</li>
+                </ul>
+
+                <h4>Hooks & State Management (hooks/)</h4>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li><strong>useMarlCompetition.ts</strong> — Poll tournament state, open SSE streams, handle equity curves, trade feed, live progress.</li>
+                    <li><strong>useSocialMedia.ts</strong> — Manage trending topics, items, filters, manual refresh state.</li>
+                </ul>
+
+                <h4>Type Definitions (types/)</h4>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li><code>marl.ts</code> — Agent, tournament, equity, trade, evolutionary types.</li>
+                    <li><code>social-media.ts</code> — Item, trend, source, scoring types.</li>
+                </ul>
+
+                <h4>Styling & Theming</h4>
+                <p>
+                    Inline styles with CSS variables for consistent theming. Chart.js via react-chartjs-2 for price and equity curves. Dark mode infrastructure in place.
+                </p>
+
+                <h3>Data Flow & Request Lifecycle</h3>
+
+                <h4>Sentiment Analysis Request</h4>
+                <div class="code-block">Frontend (Sentiment Lab) 
+  → POST /api/refresh-sentiment 
+  → SentimentService.analyzeSentiments() 
+  → Claude API (with local fallback) 
+  → SQLite cache (24h TTL) 
+  → Frontend update via polling or manual refresh</div>
+
+                <h4>MARL Tournament Request</h4>
+                <div class="code-block">Frontend (MARL tab) 
+  → POST /api/marl/tournaments/start 
+  → MarlCompetitionEngine (backend thread or BullMQ worker) 
+  → Tournament execution: agents compete, Q-tables update, results persisted 
+  → GET /api/marl/tournaments/:id/equity-curve (polling) 
+  → SSE /api/marl/tournaments/:id/events (live updates) 
+  → Frontend renders live equity curves and trade feed</div>
+
+                <h4>Social Scraping Request</h4>
+                <div class="code-block">Hourly cron or manual trigger 
+  → SocialMediaScraperManager orchestrates 7 scrapers 
+  → Items scored via 4-signal pipeline 
+  → Bulk upsert to SQLite social_media_items 
+  → TrendingDiscoveryEngine aggregates and calculates velocity 
+  → Frontend polls /api/social-media/trending and items endpoint 
+  → UI renders trending topics and feed with filters</div>
+
+                <h3>Technology Decisions & Rationale</h3>
+                <p>
+                    <strong>SQLite over PostgreSQL/MySQL:</strong> Simplifies deployment (single file), sufficient for current scale, WAL mode provides concurrency. Future migration to Postgres via repository abstraction is low-effort.
+                </p>
+                <p>
+                    <strong>BullMQ + Redis (optional):</strong> Enables horizontal worker scaling for compute-heavy tournaments and scraping without blocking main API thread. Graceful degradation when absent.
+                </p>
+                <p>
+                    <strong>Express over Next.js API routes:</strong> Explicit server control, easier middleware composition, clearer separation from frontend build tooling.
+                </p>
+                <p>
+                    <strong>React + Vite over Next.js client:</strong> Lighter frontend, simpler API proxying, faster dev rebuild. No SSR complexity needed.
+                </p>
+                <p>
+                    <strong>Chart.js over D3/Recharts:</strong> Lightweight, minimal dependencies, fast real-time equity curve rendering. D3 overkill for current use case.
+                </p>
+                <p>
+                    <strong>Tsyringe over manual DI:</strong> Standardized container pattern, testable with mock injection, reduces boilerplate.
+                </p>
+
+                <h3>API Surface & Endpoint Organization</h3>
+                <p>
+                    <strong>Core endpoints</strong> (index.ts):
+                </p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li>GET /coins (list all tracked coins)</li>
+                    <li>GET /sentiment/:symbol (cached sentiment + summary)</li>
+                    <li>POST /refresh-sentiment (bulk sentiment batch)</li>
+                    <li>GET /health (system health + service status)</li>
+                    <li>GET /trending (top trending coins)</li>
+                </ul>
+
+                <p style="margin-top: 20px;">
+                    <strong>MARL competition:</strong> 20+ endpoints covering tournament CRUD, equity curves, trade history, agent pre-training.
+                </p>
+                <p>
+                    <strong>Real trading:</strong> Broker credential storage, account balance, live order execution, kill switch controls.
+                </p>
+                <p>
+                    <strong>Social media:</strong> Item ingestion, trending reports, manual refresh, source health.
+                </p>
+                <p>
+                    <strong>Agent management:</strong> Registry, leaderboard, customization, retirement, lineage explorer.
+                </p>
+                <p>
+                    <strong>Evolutionary:</strong> Breed endpoint, fitness history, population trends, genome snapshots.
+                </p>
+
+                <p style="margin-top: 20px;">
+                    Complete API documentation available in <code>docs/API_ENDPOINTS.md</code>.
+                </p>
+            </section>
+
+            <!-- Section 4: Incomplete Work -->
+            <section class="section">
+                <h2>Incomplete Implementations</h2>
+                <p>
+                    The TODO.md tracks 7 open issues spanning high-priority scheduler infrastructure and medium-priority realistic paper trading modes. Phase 1, 2, and 3 core features are complete. The following work remains before full feature parity:
+                </p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">Issue</th>
+                            <th style="width: 35%;">Title & Description</th>
+                            <th style="width: 15%;">Priority</th>
+                            <th style="width: 15%;">Status</th>
+                            <th style="width: 20%;">Blocker</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>#1</strong></td>
+                            <td><strong>Frontend Live Tournament Monitor</strong><br>Real-time tournament monitoring UI using stream events, live equity chart, and trade feed.</td>
+                            <td>High</td>
+                            <td><span class="badge success">✓ Done</span></td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td><strong>#2</strong></td>
+                            <td><strong>Backend Tournament Scheduler</strong><br>Add schedule persistence, CRUD endpoints, and cron-based execution for one-shot and recurring tournaments.</td>
+                            <td>High</td>
+                            <td><span class="badge warning">Blocked</span></td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td><strong>#3</strong></td>
+                            <td><strong>Frontend Tournament Scheduler UI</strong><br>Workspace for managing tournament schedules from the UI (create, edit, enable/disable, run-now, delete).</td>
+                            <td>High</td>
+                            <td><span class="badge warning">Blocked</span></td>
+                            <td>#2</td>
+                        </tr>
+                        <tr>
+                            <td><strong>#4</strong></td>
+                            <td><strong>Backend Realistic Paper Exchange</strong><br>Implement paper trading with live pricing fallback, configurable fees, and realistic slippage.</td>
+                            <td>Medium</td>
+                            <td><span class="badge warning">Blocked</span></td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td><strong>#5</strong></td>
+                            <td><strong>Backend REALISTIC_PAPER Mode Wiring</strong><br>Add to trading mode enum, factory routing, config catalog, and tournament validation.</td>
+                            <td>Medium</td>
+                            <td><span class="badge warning">Blocked</span></td>
+                            <td>#4</td>
+                        </tr>
+                        <tr>
+                            <td><strong>#6</strong></td>
+                            <td><strong>Frontend Realistic Paper Mode UI</strong><br>Mode selector, fee/slippage config display, and friendly mode labeling in history.</td>
+                            <td>Medium</td>
+                            <td><span class="badge warning">Blocked</span></td>
+                            <td>#5</td>
+                        </tr>
+                        <tr>
+                            <td><strong>#7</strong></td>
+                            <td><strong>Frontend Raw Social Scraping UI</strong><br>Advanced utilities section: per-symbol scrape, batch scrape, trending recompute, manual ingest triggers.</td>
+                            <td>Low</td>
+                            <td><span class="badge warning">Partial</span></td>
+                            <td>—</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Issue #2: Backend Tournament Scheduler</h3>
+                <div class="tier-1">
+                    <p><strong>Expected scope:</strong> ~350–450 LOC backend</p>
+                    <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                        <li>Add <code>tournament_schedules</code> table with columns: id, name, cron_expression (or ISO date for one-shot), agent_ids, tournament_params, enabled, last_run, next_run, created_at.</li>
+                        <li>SchedulerService: CRUD operations, cron parsing, execution loop, error handling.</li>
+                        <li>Routes: POST /api/tournaments/schedules, GET, PUT, DELETE, POST /run-now.</li>
+                        <li>Lifecycle: Start/stop scheduler on app init/shutdown.</li>
+                        <li>Tests: Create, list, get, update, delete, run-now, cron validation.</li>
+                    </ul>
+                    <p><strong>Effort estimate:</strong> 2–3 days (1 dev with TDD discipline)</p>
+                </div>
+
+                <h3>Issues #4–6: Realistic Paper Trading</h3>
+                <div class="tier-2">
+                    <p><strong>Expected scope (combined):</strong> ~600–800 LOC backend, ~200–300 LOC frontend</p>
+                    <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                        <li><strong>#4:</strong> RealisticPaperExchange implementing ExchangeInterface. Live quote source, fee presets (Crypto.com, Binance, Coinbase % profiles), per-side slippage tuning, commission deduction.</li>
+                        <li><strong>#5:</strong> Enum value REALISTIC_PAPER, factory routing, config keys for fees/slippage, tournament validation updates.</li>
+                        <li><strong>#6:</strong> Mode selector button in correct order, config display toggle, friendly label in tournament results, tests for mode selection and UI behavior.</li>
+                    </ul>
+                    <p><strong>Effort estimate:</strong> 4–5 days total (2 devs or 1 dev over 2 weeks)</p>
+                </div>
+
+                <h3>Issue #7: Advanced Social Scraping UI</h3>
+                <div class="tier-3">
+                    <p><strong>Expected scope:</strong> ~200–300 LOC frontend</p>
+                    <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                        <li>Per-symbol manual scrape trigger UI (single coin or batch).</li>
+                        <li>Trending recompute button with progress feedback.</li>
+                        <li>Manual trending ingest form (for testing edge cases).</li>
+                        <li>Grouped under collapsible "Advanced Utilities" section in Admin or Social tab.</li>
+                        <li>Backend endpoints already exist; UI integration only.</li>
+                    </ul>
+                    <p><strong>Effort estimate:</strong> 1–1.5 days (straightforward UI wiring)</p>
+                </div>
+
+                <h3>Gap Analysis & Risk</h3>
+                <p>
+                    <strong>Critical gaps:</strong> Tournament scheduling is valuable for recurring backtest/evolution workflows. High priority but not blocking core functionality.
+                </p>
+                <p>
+                    <strong>Nice-to-haves:</strong> Realistic paper mode and advanced scraping UI are polish features. Existing PAPER mode is sufficient for current testing; REALISTIC_PAPER is a convenience flag.
+                </p>
+                <p>
+                    <strong>Risk mitigation:</strong> Current live tournament monitoring and evolutionary system are fully functional. These gaps do not affect data integrity, safety, or tournament execution.
+                </p>
+            </section>
+
+            <!-- Section 5: Test Coverage -->
+            <section class="section">
+                <h2>Test Coverage Analysis</h2>
+
+                <h3>Overall Coverage Summary</h3>
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="label">Backend Lines</div>
+                        <div class="value">56.2%</div>
+                        <div style="font-size: 0.85em; color: #666; margin-top: 5px;">3,464 / 6,163</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Backend Branches</div>
+                        <div class="value">40.4%</div>
+                        <div style="font-size: 0.85em; color: #666; margin-top: 5px;">1,318 / 3,265</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Frontend Lines</div>
+                        <div class="value">70.1%</div>
+                        <div style="font-size: 0.85em; color: #666; margin-top: 5px;">959 / 1,369</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Frontend Branches</div>
+                        <div class="value">50.9%</div>
+                        <div style="font-size: 0.85em; color: #666; margin-top: 5px;">735 / 1,443</div>
+                    </div>
+                </div>
+
+                <h3>Backend Coverage Breakdown</h3>
+                <p>
+                    <strong>161 TypeScript files; 26 test files (Jest + ts-jest)</strong>
+                </p>
+
+                <h4>High Coverage (>80%)</h4>
+                <table style="margin: 20px 0;">
+                    <thead>
+                        <tr>
+                            <th>Module</th>
+                            <th>Lines</th>
+                            <th>Functions</th>
+                            <th>Branches</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>container.ts</code></td>
+                            <td>100%</td>
+                            <td>100%</td>
+                            <td>100%</td>
+                            <td>DI container initialization</td>
+                        </tr>
+                        <tr>
+                            <td><code>sentiment-analyzer.ts</code></td>
+                            <td>89.3%</td>
+                            <td>78.7%</td>
+                            <td>62.8%</td>
+                            <td>Core NLP scoring; well-tested</td>
+                        </tr>
+                        <tr>
+                            <td><code>sentiment.ts</code></td>
+                            <td>89.5%</td>
+                            <td>44.4%</td>
+                            <td>60.0%</td>
+                            <td>Claude API wrapper + local fallback</td>
+                        </tr>
+                        <tr>
+                            <td><code>content-signals.ts</code></td>
+                            <td>86.7%</td>
+                            <td>97.1%</td>
+                            <td>50.7%</td>
+                            <td>NewsAPI + Reddit + X pipeline; excellent coverage</td>
+                        </tr>
+                        <tr>
+                            <td><code>coingecko.ts</code></td>
+                            <td>100%</td>
+                            <td>100%</td>
+                            <td>81.8%</td>
+                            <td>Market data fetching</td>
+                        </tr>
+                        <tr>
+                            <td><code>finbert.ts</code></td>
+                            <td>100%</td>
+                            <td>100%</td>
+                            <td>100%</td>
+                            <td>Hugging Face inference wrapper</td>
+                        </tr>
+                        <tr>
+                            <td><code>pre-trainer.ts</code></td>
+                            <td>100%</td>
+                            <td>100%</td>
+                            <td>77.8%</td>
+                            <td>Agent pre-training on synthetic markets</td>
+                        </tr>
+                        <tr>
+                            <td><code>crypto-com-exchange.ts</code></td>
+                            <td>93.0%</td>
+                            <td>90.9%</td>
+                            <td>64.5%</td>
+                            <td>Primary exchange adapter; good coverage</td>
+                        </tr>
+                        <tr>
+                            <td><code>crypto-com-client.ts</code></td>
+                            <td>89.4%</td>
+                            <td>90.5%</td>
+                            <td>52.9%</td>
+                            <td>REST v2 HTTP client; well-tested</td>
+                        </tr>
+                        <tr>
+                            <td><code>binance-us-exchange.ts</code></td>
+                            <td>84.2%</td>
+                            <td>86.7%</td>
+                            <td>79.5%</td>
+                            <td>Binance adapter; solid coverage</td>
+                        </tr>
+                        <tr>
+                            <td><code>paper-exchange.ts</code></td>
+                            <td>100%</td>
+                            <td>100%</td>
+                            <td>69.2%</td>
+                            <td>In-memory simulated exchange; fully covered</td>
+                        </tr>
+                        <tr>
+                            <td><code>risk-manager.ts</code></td>
+                            <td>96.7%</td>
+                            <td>88.9%</td>
+                            <td>100%</td>
+                            <td>Kill switch + position guards; excellent coverage</td>
+                        </tr>
+                        <tr>
+                            <td><code>trading-service.ts</code></td>
+                            <td>94.6%</td>
+                            <td>100%</td>
+                            <td>71.4%</td>
+                            <td>Safety wrapper; very solid</td>
+                        </tr>
+                        <tr>
+                            <td><code>agent-cosmetics-manager.ts</code></td>
+                            <td>100%</td>
+                            <td>100%</td>
+                            <td>92.3%</td>
+                            <td>Name/emoji/color/bio management</td>
+                        </tr>
+                        <tr>
+                            <td><code>agent-genome.ts</code></td>
+                            <td>100%</td>
+                            <td>100%</td>
+                            <td>100%</td>
+                            <td>Genome CRUD operations</td>
+                        </tr>
+                        <tr>
+                            <td><code>agent-statistics-manager.ts</code></td>
+                            <td>100%</td>
+                            <td>100%</td>
+                            <td>62.5%</td>
+                            <td>Stats tracking; complete coverage</td>
+                        </tr>
+                        <tr>
+                            <td><code>evolutionary-orchestrator.ts</code></td>
+                            <td>81.9%</td>
+                            <td>76.5%</td>
+                            <td>63.3%</td>
+                            <td>Multi-gen loop; good foundation</td>
+                        </tr>
+                        <tr>
+                            <td><code>genetic-crossover.ts</code></td>
+                            <td>87.3%</td>
+                            <td>57.1%</td>
+                            <td>61.3%</td>
+                            <td>Crossover algorithms; solid</td>
+                        </tr>
+                        <tr>
+                            <td><code>mutation-engine.ts</code></td>
+                            <td>87.5%</td>
+                            <td>53.3%</td>
+                            <td>66.7%</td>
+                            <td>Mutation strategies; good</td>
+                        </tr>
+                        <tr>
+                            <td><code>sqlite-social-store.ts</code></td>
+                            <td>96.4%</td>
+                            <td>93.8%</td>
+                            <td>82.7%</td>
+                            <td>Social items persistence; excellent</td>
+                        </tr>
+                        <tr>
+                            <td><code>trending-discovery-engine.ts</code></td>
+                            <td>98.6%</td>
+                            <td>100%</td>
+                            <td>69.6%</td>
+                            <td>Trending aggregation; nearly perfect</td>
+                        </tr>
+                        <tr>
+                            <td><code>multi-source-calculator.ts</code></td>
+                            <td>91.6%</td>
+                            <td>86.7%</td>
+                            <td>73.0%</td>
+                            <td>Trend synthesis; very solid</td>
+                        </tr>
+                        <tr>
+                            <td><code>item-scorer.ts</code></td>
+                            <td>85.9%</td>
+                            <td>93.8%</td>
+                            <td>54.6%</td>
+                            <td>4-signal scoring pipeline; excellent</td>
+                        </tr>
+                        <tr>
+                            <td><code>sarcasm-detector.ts</code></td>
+                            <td>100%</td>
+                            <td>100%</td>
+                            <td>100%</td>
+                            <td>Sarcasm heuristics; fully covered</td>
+                        </tr>
+                        <tr>
+                            <td><code>coin-extractor.ts</code></td>
+                            <td>100%</td>
+                            <td>100%</td>
+                            <td>100%</td>
+                            <td>Coin mention extraction; perfect</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Medium Coverage (50–80%)</h4>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li><code>marl-competition-engine.ts</code> — 63.2% lines (531/840). Core tournament logic; some edge cases and error paths untested.</li>
+                    <li><code>bot-detection.ts</code> — 100% lines. Bot classification logic; well-tested.</li>
+                    <li><code>synthetic-market-generator.ts</code> — 94.7% lines. Synthetic price regime generation; nearly complete.</li>
+                    <li><code>onchain.ts</code> — 82.7% lines. On-chain data fetching; good coverage.</li>
+                    <li><code>ingest-queue.ts</code> — 89.2% lines. Social item ingestion queue; solid coverage.</li>
+                </ul>
+
+                <h4>Low Coverage (<50%)</h4>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li><code>storage.ts</code> — 8.8% lines. Database lifecycle; most calls integration-tested via routes, not unit-tested.</li>
+                    <li><code>trading-agent.ts</code> — 11.7% lines. Agent Q-learning logic; tested via competition engine, not isolated.</li>
+                    <li><code>trending-topics.ts</code> — 10.1% lines. Trending service; low priority feature, partially tested.</li>
+                    <li><code>social-scraper.ts</code> — 17.2% lines. Platform scrapers (Twitter, Discord, Reddit, Telegram, YouTube, TikTok) — many tested via mock API responses, but error paths sparse.</li>
+                    <li><code>Broker adapters</code> — <10% lines. Alpaca, Coinbase, Binance adapters — require live credential testing; unit coverage limited by external dependency.</li>
+                    <li><code>Repository adapters</code> — 5–25% lines. CRUD operations; integration-tested via routes, not isolated.</li>
+                </ul>
+
+                <h3>Frontend Coverage Breakdown</h3>
+                <p>
+                    <strong>17 TypeScript files; 8 test files (Vitest + @testing-library/react)</strong>
+                </p>
+
+                <table style="margin: 20px 0;">
+                    <thead>
+                        <tr>
+                            <th>Component/Hook</th>
+                            <th>Lines</th>
+                            <th>Functions</th>
+                            <th>Branches</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>AgentManagementDashboard.tsx</code></td>
+                            <td>81.3%</td>
+                            <td>78.3%</td>
+                            <td>59.2%</td>
+                            <td><span class="badge success">Well-tested</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>SocialDashboard.tsx</code></td>
+                            <td>77.5%</td>
+                            <td>66.7%</td>
+                            <td>49.7%</td>
+                            <td><span class="badge success">Good</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>useSocialMedia.ts</code></td>
+                            <td>93.8%</td>
+                            <td>93.8%</td>
+                            <td>63.0%</td>
+                            <td><span class="badge success">Excellent</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>useMarlCompetition.ts</code></td>
+                            <td>64.1%</td>
+                            <td>60.0%</td>
+                            <td>34.4%</td>
+                            <td><span class="badge warning">Partial</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>MarlCompetitionViewer.tsx</code></td>
+                            <td>60.6%</td>
+                            <td>44.6%</td>
+                            <td>44.3%</td>
+                            <td><span class="badge warning">Partial</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>App.tsx</code></td>
+                            <td>61.0%</td>
+                            <td>48.1%</td>
+                            <td>46.6%</td>
+                            <td><span class="badge warning">Root complexity</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Test Quality Observations</h3>
+                <p>
+                    <strong>Strengths:</strong>
+                </p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li><strong>Service layer:</strong> Sentiment analysis, exchange adapters, social pipeline, and evolutionary components have solid unit test coverage with mocked dependencies.</li>
+                    <li><strong>Repository layer:</strong> CRUD operations covered via mocked SQLite; transaction behavior verified.</li>
+                    <li><strong>Frontend components:</strong> Agent management and social dashboard have good React Testing Library coverage for user interactions and state flows.</li>
+                    <li><strong>CI/CD integration:</strong> Jest and Vitest run on every PR; type-checking enforced; linting passes before merge.</li>
+                    <li><strong>Postman collection:</strong> Comprehensive API endpoint test suite available for manual verification and integration testing.</li>
+                </ul>
+
+                <p>
+                    <strong>Gaps:</strong>
+                </p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li><strong>Database integration tests:</strong> Storage layer mostly exercised through route tests; low line coverage on storage.ts and repository adapters suggests most DB logic is tested end-to-end rather than isolated.</li>
+                    <li><strong>MARL agent learning:</strong> Trading agent Q-learning tested via competition engine; isolated unit tests for learning updates are sparse.</li>
+                    <li><strong>Social scraper error paths:</strong> Platform-specific scrapers have low coverage; error handling and fallback paths under-tested (requires live API mocking or fixtures).</li>
+                    <li><strong>Broker adapter testing:</strong> Requires real or sandboxed credentials; most coverage via mocks; edge cases (auth failures, order rejections) not fully exercised.</li>
+                    <li><strong>SSE streaming:</strong> Live tournament monitoring via SSE well-integrated but event flow edge cases (stream interruption, reconnection) under-tested on frontend.</li>
+                    <li><strong>Branch coverage:</strong> Both backend (40.4%) and frontend (50.9%) branch coverage indicate untested conditional paths; error cases and fallback branches are common gaps.</li>
+                </ul>
+
+                <h3>Test Coverage Recommendations</h3>
+                <p>
+                    <strong>Priority 1 (Core resilience):</strong>
+                </p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li>Increase MARL competition engine branch coverage to >60%. Test early termination, agent elimination, fitness tie-breaking.</li>
+                    <li>Add error path tests for storage.ts (connection failures, migrations, recovery).</li>
+                    <li>Cover scraper fallback behavior (platform-specific API degradation).</li>
+                </ul>
+
+                <p>
+                    <strong>Priority 2 (Feature completeness):</strong>
+                </p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li>Isolate trading-agent.ts Q-learning logic with synthetic episode tests.</li>
+                    <li>Add repository adapter integration tests (create, retrieve, update, delete for each type).</li>
+                    <li>Test SSE reconnection and event ordering on frontend.</li>
+                </ul>
+
+                <p>
+                    <strong>Priority 3 (Polish):</strong>
+                </p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li>Broker adapter mocking improvements for Coinbase and Alpaca (currently <5% coverage).</li>
+                    <li>ConfigEditor UI tests for validation and persistence flows.</li>
+                    <li>Trending calculation edge cases (ties, velocity thresholds, historical gaps).</li>
+                </ul>
+            </section>
+
+            <!-- Section 6: Editorial Assessment -->
+            <section class="section">
+                <h2>Editorial Assessment</h2>
+
+                <h3>Project Quality Score</h3>
+                <div style="text-align: center; margin-bottom: 50px;">
+                    <div class="score-circle score-good">7.2/10</div>
+                    <p style="font-size: 1.1em; color: #4dabf7; font-weight: 700; margin-top: 15px;">GOOD — Solid foundation with notable strengths; deliberate improvements needed for production hardening</p>
+                </div>
+
+                <h3>Strengths</h3>
+
+                <div class="strength">
+                    <h4>✓ Architectural Maturity & Clean Layering</h4>
+                    <p>
+                        The service-oriented backend architecture demonstrates strong separation of concerns. Services (SentimentService, MarlCompetitionEngine, SocialMediaScraperManager, ExchangeFactory) are well-isolated, testable, and pluggable. The repository pattern decouples persistence from business logic, enabling future database swaps. The DI container (tsyringe) manages lifecycle cleanly. This is <span class="highlight">not a monolithic ball of mud</span>—it's a thoughtful, layered design.
+                    </p>
+                </div>
+
+                <div class="strength">
+                    <h4>✓ Feature Completeness & Ambition</h4>
+                    <p>
+                        Three complete phases covering sentiment analysis, multi-agent RL, and social intelligence represent a <span class="highlight">significant amount of work</span>. The combination of real-time market data, Claude-powered NLP, evolutionary trading agents, and cross-source social monitoring is non-trivial. Most features work end-to-end; live tournament monitoring via SSE, agent breeding UI, and trending discovery are polished and integrated. This is not a toy project.
+                    </p>
+                </div>
+
+                <div class="strength">
+                    <h4>✓ Zero-Trust & Security Posture</h4>
+                    <p>
+                        Broker credentials are AES-256-GCM encrypted with a master key (BROKER_MASTER_KEY). No plaintext secrets in code. The trading service wraps all exchanges with safety guards (kill switch, position limits, minimum notional). Risk management is thoughtful. This is a serious production mindset, not a rough prototype.
+                    </p>
+                </div>
+
+                <div class="strength">
+                    <h4>✓ Documentation & Onboarding</h4>
+                    <p>
+                        CLAUDE.md is exceptional. It provides clear command references, architecture diagrams (text-based), database schema notes, test patterns, and environment variable catalogs. README.md is comprehensive with quick-start, phase summaries, and deployment guidance. A new developer can spin up the app and understand data flow within hours. <span class="highlight">Few projects invest this level of care</span> in developer documentation.
+                    </p>
+                </div>
+
+                <div class="strength">
+                    <h4>✓ Testing Culture & CI/CD</h4>
+                    <p>
+                        56–70% test coverage across backend and frontend is solid. GitHub Actions enforces docs validation, linting, type-checking, and testing before merging. Jest and Vitest are configured with sensible defaults. Postman collections provide API testing. This shows a team that values quality gates.
+                    </p>
+                </div>
+
+                <div class="strength">
+                    <h4>✓ Multi-Exchange Integration</h4>
+                    <p>
+                        Support for Crypto.com, Binance.US, Coinbase, and Alpaca with unified ExchangeInterface abstraction is mature. The ability to toggle trading providers and modes (PAPER/SANDBOX/LIVE) via config is excellent. Credential encryption and per-provider fee handling are professional touches.
+                    </p>
+                </div>
+
+                <h3>Concerns & Areas for Improvement</h3>
+
+                <div class="concern">
+                    <h4>⚠ Branch Coverage Gaps (40% backend, 51% frontend)</h4>
+                    <p>
+                        While line coverage is respectable (56–70%), branch coverage reveals significant untested conditional paths. Error handling, edge cases, and fallback logic are sparse. This increases the risk of subtle bugs under stress or unusual conditions (API timeouts, rate limits, malformed data). <span class="highlight">Recommendation:</span> Prioritize error path testing (scraper fallbacks, exchange API degradation, agent Q-learning edge cases) before scaling to live trading or high-frequency tournaments.
+                    </p>
+                </div>
+
+                <div class="concern">
+                    <h4>⚠ MARL Competition Engine Complexity (840 LOC, 63% coverage)</h4>
+                    <p>
+                        The competition engine is the most critical and complex module. At 840 lines with 63% coverage, some order-matching logic, agent elimination rules, and tie-breaking scenarios may not be fully exercised. This is where financial behavior emerges—subtle bugs could lead to agent collusion, order manipulation, or unfair fitness calculations. <span class="highlight">Recommendation:</span> Add property-based tests for order-matching invariants (e.g., total liquidity is never negative, price moves monotonically for the same pair) and tournament fairness (agents with identical genomes have same fitness distribution).
+                    </p>
+                </div>
+
+                <div class="concern">
+                    <h4>⚠ Database Schema Versioning & Migrations</h4>
+                    <p>
+                        Migrations exist for agent identity and evolutionary tables, but the migration system is not versioned or atomic. If a user runs on an old schema, silent data loss or constraint violations could occur. No explicit rollback strategy. <span class="highlight">Recommendation:</span> Adopt numbered migration files (e.g., 001-initial.sql, 002-add-agent-identity.sql) with checksums and rollback tests. Consider using a lightweight migration runner (e.g., sql.js or a simple Node script) that tracks applied migrations.
+                    </p>
+                </div>
+
+                <div class="concern">
+                    <h4>⚠ Rate Limiting & API Quota Management</h4>
+                    <p>
+                        Social scrapers (Twitter, Reddit, YouTube, TikTok) have quota limits. Source metadata tracks error counts, but there's no proactive rate-limit detection or backoff strategy. If a quota is exceeded, the scraper may silently fail or degrade. The hourly cron could hit burst limits. <span class="highlight">Recommendation:</span> Implement exponential backoff, track rate-limit headers (Retry-After, X-RateLimit-Remaining), and queue jobs for retry during low-traffic windows. Add alerts when quota is approaching.
+                    </p>
+                </div>
+
+                <div class="concern">
+                    <h4>⚠ Sentiment Analysis Caching & Cache Invalidation</h4>
+                    <p>
+                        Sentiment results are cached with a 24-hour TTL. But if sentiment for a coin changes dramatically (e.g., breaking news), users will see stale scores for up to 24 hours. The refresh endpoint requires API authentication, so dashboard users can't manually invalidate. <span class="highlight">Recommendation:</span> Add a "clear cache for symbol" endpoint with lightweight auth (session-based, not API key). Consider shorter TTL (6 hours) during high-volatility windows, or trigger cache invalidation on significant price swings (>5% hourly change).
+                    </p>
+                </div>
+
+                <div class="concern">
+                    <h4>⚠ Social Scraper Coverage & Maintenance Burden</h4>
+                    <p>
+                        7 social scrapers are a lot to maintain. Twitter, Discord, Telegram, YouTube, TikTok all have evolving APIs and rate-limit policies. The code for each scraper is tightly coupled to platform specifics. If a platform changes its API (e.g., X restricts v2 access), the scraper breaks silently or returns empty results. <span class="highlight">Recommendation:</span> Add integration tests with fixture data (saved HTML/JSON from each platform). Create a scraper health dashboard showing last-successful-run timestamps. Mark scrapers as "experimental" or "stable" based on test pass rates. Consider deprecating low-value scrapers (e.g., YouTube may have limited crypto discussion).
+                    </p>
+                </div>
+
+                <div class="concern">
+                    <h4>⚠ Live Trading Safety & Audit Trail</h4>
+                    <p>
+                        The trading service has safety guards (kill switch, position limits), but there's no audit trail of why orders were placed/rejected. If an agent makes a bad decision that costs money, there's no way to trace the decision path, state values, or Q-learning parameters at execution time. <span class="highlight">Recommendation:</span> Log decision context before every order: state vector, Q-values, chosen action, market depth, current equity. Archive logs for post-mortems. Implement a "dry-run" mode that logs decisions without executing.
+                    </p>
+                </div>
+
+                <div class="concern">
+                    <h4>⚠ Agent Genealogy & Breeding Pool Explosion</h4>
+                    <p>
+                        The agent lineage tracking is clever, but there's no mechanism to prevent genealogy explosion. After 20 generations with 10 agents per generation, you could have 200+ agents in the registry. Breeding from this pool could lead to inbreeding (genetic bottleneck) if not careful. The UI shows genealogy trees, but the selection algorithm doesn't enforce diversity. <span class="highlight">Recommendation:</span> Add diversity metrics to the fitness calculation (e.g., Hamming distance from population mean). Implement a "culling" strategy that removes low-fitness agents or those beyond a max age. Add telemetry for genealogy tree depth and branch factor.
+                    </p>
+                </div>
+
+                <div class="concern">
+                    <h4>⚠ Frontend SSE & Polling Fallback Robustness</h4>
+                    <p>
+                        Live tournament monitoring uses SSE with polling fallback. But the fallback logic could be more robust—if the SSE stream hangs (partial data), the poll might also hang. Network-level debugging is hard. No heartbeat/ping mechanism to detect stale connections. <span class="highlight">Recommendation:</span> Add server-side heartbeat (comment line every 10s if no events). Implement client-side connection timeout (30s idle). Add telemetry tracking which path (SSE vs polling) is being used. Display connection status in UI (green for live, yellow for polling, red for offline).
+                    </p>
+                </div>
+
+                <div class="concern">
+                    <h4>⚠ Realistic Paper Trading Not Implemented</h4>
+                    <p>
+                        PAPER mode uses in-memory order matching. There's no realistic paper mode that applies real fees/slippage. This makes backtesting results optimistic—agents trained on PAPER might perform worse on SANDBOX/LIVE. (Issue #4–6 are marked "not started".) <span class="highlight">Recommendation:</span> Implement REALISTIC_PAPER mode quickly if live trading is planned. Even if tournament scheduling (Issue #2) is deferred, fee/slippage modeling is important for realistic agent training.
+                    </p>
+                </div>
+
+                <h3>Tiered Improvement Roadmap</h3>
+
+                <div class="tier-1">
+                    <h4>Tier 1: Critical (Do This Before Live Trading) <span class="tier-label">URGENT</span></h4>
+                    <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                        <li><strong>Increase MARL branch coverage to 60%+.</strong> Add tests for order-matching invariants, agent elimination, fitness edge cases.</li>
+                        <li><strong>Implement decision audit trail.</strong> Log state + Q-values + action before each order. Archive for post-mortems.</li>
+                        <li><strong>Realistic paper trading mode.</strong> Fee/slippage modeling to avoid agent overoptimism.</li>
+                        <li><strong>Rate-limit handling for social scrapers.</strong> Exponential backoff, quota detection, retry queues.</li>
+                        <li><strong>Trading history & position tracking UI.</strong> Show current holdings, P&L, order history, agent decision logs.</li>
+                    </ul>
+                </div>
+
+                <div class="tier-2">
+                    <h4>Tier 2: Important (Improve Robustness &amp; Maintainability) <span class="tier-label">SOON</span></h4>
+                    <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                        <li><strong>Database migration versioning.</strong> Numbered files, checksums, rollback capability.</li>
+                        <li><strong>Scraper health & monitoring.</strong> Last-successful-run timestamps, stability dashboard, fixture-based tests.</li>
+                        <li><strong>Agent diversity enforcement.</strong> Genetic algorithms for genealogy quality; cull aging/low-fitness agents.</li>
+                        <li><strong>SSE heartbeat & connection telemetry.</strong> Server-side ping, client-side timeout, UI status indicator.</li>
+                        <li><strong>Tournament scheduling infrastructure.</strong> (Issue #2–3) Recurring tournament support.</li>
+                    </ul>
+                </div>
+
+                <div class="tier-3">
+                    <h4>Tier 3: Nice-to-Have (Polish &amp; Optimization) <span class="tier-label">LATER</span></h4>
+                    <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                        <li><strong>Sentiment cache invalidation UI.</strong> Manual per-symbol refresh without API key.</li>
+                        <li><strong>Advanced social utilities UI.</strong> (Issue #7) Batch scrape, trending recompute, ingest triggers.</li>
+                        <li><strong>Agent performance analytics.</strong> Equity curves, drawdown analysis, strategy attribution.</li>
+                        <li><strong>Multi-market backtesting.</strong> Test agents across Bitcoin bear/bull regimes, alts vs BTC correlation.</li>
+                        <li><strong>Broker API error recovery.</strong> Retry-with-backoff for transient failures, circuit breaker for cascading failures.</li>
+                    </ul>
+                </div>
+
+                <h3>Strengths to Leverage</h3>
+
+                <p style="margin-top: 30px;">
+                    <strong>This codebase has excellent foundations:</strong>
+                </p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li>Clean architecture makes it easy to add features without tangling dependencies.</li>
+                    <li>Strong documentation means new contributors don't need deep context to be productive.</li>
+                    <li>Test infrastructure (Jest, Vitest, CI/CD) is in place; just needs more coverage on edge cases.</li>
+                    <li>Multi-exchange abstraction lets you swap providers without rewriting core logic.</li>
+                    <li>Evolutionary system is genuinely interesting and differentiates the project from simpler trading bots.</li>
+                </ul>
+
+                <h3>Conclusion</h3>
+                <p>
+                    Sentiment Analyzer is a <span class="highlight">well-engineered, ambitious project</span> at the intersection of NLP, multi-agent RL, and crypto trading. It demonstrates strong software engineering practices (layered architecture, dependency injection, testing, documentation) and non-trivial domain expertise (MARL, evolutionary algorithms, sentiment analysis, exchange APIs).
+                </p>
+                <p>
+                    The main gap is not architectural—it's edge-case resilience. Before production trading or high-frequency agent tournaments, the project would benefit from:
+                </p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-light);">
+                    <li>Increased branch coverage, especially for the MARL competition engine.</li>
+                    <li>Audit trails and observability around financial decisions.</li>
+                    <li>Robust handling of API failures and quota limits (especially for social scrapers).</li>
+                    <li>Migration versioning and database recovery strategies.</li>
+                </ul>
+                <p>
+                    <strong>Overall assessment:</strong> A strong B+ / A- project in its current state. With the Tier 1 improvements above, it could be production-ready for live trading on small positions. Tier 2 improvements would increase confidence and reduce operational overhead. This is not a throwaway prototype—it's a platform with real staying power.
+                </p>
+            </section>
+        </div>
+
+        <footer>
+            <p>
+                <strong>Sentiment Analyzer — Project Analysis Report</strong><br>
+                Generated March 2025 | Backend: 161 TS files, 56.2% test coverage | Frontend: 17 TS files, 70.1% test coverage<br>
+                Repository: <a href="https://github.com/infinyte/sentiment-analyzer" style="color: var(--primary); text-decoration: none; font-weight: 600;">github.com/infinyte/sentiment-analyzer</a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        function switchSection(index) {
+            const sections = document.querySelectorAll('.section');
+            const buttons = document.querySelectorAll('.nav-btn');
+            
+            sections.forEach(s => s.classList.remove('active'));
+            buttons.forEach(b => b.classList.remove('active'));
+            
+            sections[index].classList.add('active');
+            buttons[index].classList.add('active');
+            
+            window.scrollTo(0, 0);
+        }
+
+        // Dark mode toggle (infrastructure)
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('dark-mode', document.body.classList.contains('dark-mode'));
+        }
+
+        // Initialize dark mode from localStorage
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+
+        // Copy to clipboard for code blocks
+        document.querySelectorAll('.code-block').forEach(block => {
+            const btn = document.createElement('button');
+            btn.textContent = 'Copy';
+            btn.style.cssText = 'position: absolute; top: 10px; right: 10px; padding: 5px 15px; background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;';
+            block.style.position = 'relative';
+            block.appendChild(btn);
+            btn.onclick = () => {
+                navigator.clipboard.writeText(block.textContent.replace('Copy', ''));
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy', 2000);
+            };
+        });
+    </script>
+</body>
+</html>

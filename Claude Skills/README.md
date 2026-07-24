@@ -110,5 +110,4 @@ New skills added to this folder should follow this same shape rather than invent
   Purpose and Changelog for how it relates to `refactoring-pass`, `legacy-code-safety`, and
   `pragmatic-engineering`.
 
-A GitHub Copilot Pro edition of each skill here (where one exists) lives in the sibling
-`../GitHub Copilot Pro Skills/` folder.
+This repository snapshot focuses on the Claude skill package family.

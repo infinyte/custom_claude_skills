@@ -1,6 +1,6 @@
 # Repository Layout
 
-This repository is organized around two target platforms that share the same skill concepts.
+This repository is currently organized around one active package family: Claude skills.
 
 ## Top-Level Structure
 
@@ -8,49 +8,47 @@ This repository is organized around two target platforms that share the same ski
 AI-Agent-Skills/
   docs/
   Claude Skills/
-  GitHub Copilot Pro Skills/
+  LICENSE
+  README.md
 ```
 
 - `docs/` contains repo-wide navigation and inventory notes.
 - `Claude Skills/` contains the Claude-targeted packages.
-- `GitHub Copilot Pro Skills/` contains the Copilot-targeted packages.
+- `README.md` is the repository root entry point.
 
-## Claude Package Family
+## Claude Skills Package Family
 
-Every skill is organized as a direct skill folder:
-
-```text
-<skill-name>/
-  SKILL.md
-  references/
-  <skill-name>.skill      # checked-in packaged archive, kept alongside the source
-```
-
-`scripts/` or `assets/` are added only where a specific skill genuinely needs them; none of the
-skills currently in this folder do. No skill carries a separate per-skill `README.md`,
-`CHANGELOG.md`, or `LICENSE` file — that content lives inside `SKILL.md`'s `## Purpose` and
-`## Changelog` sections instead.
-
-## GitHub Copilot Pro Package Family
-
-Every skill is also stored as a direct skill folder, with the same shape as the Claude side minus
-the packaged archive (Copilot has no `.skill`-equivalent format):
+Target folder shape for each skill:
 
 ```text
 <skill-name>/
   SKILL.md
-  references/
+  references/             # optional support material
+  scripts/                # optional executable helpers
+  assets/                 # optional templates or static assets
+  <skill-name>.skill      # optional checked-in packaged archive
 ```
 
-Skills are installed by dropping the folder into `.github/skills/<skill-name>/` (or
-`.claude/skills/`, `.agents/skills/`) — see `GitHub Copilot Pro Skills/README.md` for the full
-installation paths. No skill in this folder ships a `.github/`-rooted repository-install bundle,
-separate prompt/instructions wrapper files, or per-skill README/CHANGELOG/LICENSE files.
+Most skills in this repository follow `SKILL.md` + `references/`. A few skills include larger
+standalone documentation sets that are being normalized.
+
+## Current Standardization Snapshot
+
+- Source-complete core skills: `feynman-peer-review`, `investigation-carryover`,
+  `legacy-code-safety`, `pragmatic-engineering`, `production-reliability`,
+  `refactoring-pass`, `software-design-simplicity`, `vertical-slice-tdd`.
+- Restored from package archives to source-first shape: `prompt-architect`,
+  `portfolio-showcase-generator`, `todo-issue-formatter`.
+- High-documentation-sprawl folders under active consolidation: `github-pages-generator`,
+  `github-project-analyzer`.
+
+See `standardization-plan.md` for rollout phases and success criteria.
 
 ## Source Of Truth Rules
 
-- `SKILL.md` is the canonical, self-contained instruction file for each skill package — nothing
-  outside it (and the `references/` material it points to) is required reading to use the skill.
-- `references/` holds support material the skill loads on demand; it is not a separate skill.
-- The docs in this folder describe the repository inventory and layout only; they do not replace
-  the per-skill instructions.
+- `SKILL.md` is the canonical, self-contained instruction file for each skill package.
+- `references/` holds support material the skill loads on demand.
+- Package artifacts (`.skill`) are distribution outputs; source files in the folder are
+  authoritative for maintenance.
+- The docs in this folder describe repository inventory and standards; they do not replace
+  per-skill instructions.

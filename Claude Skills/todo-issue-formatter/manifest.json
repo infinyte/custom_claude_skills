@@ -1,0 +1,10 @@
+{
+  "name": "todo-formatter",
+  "version": "1.0.0",
+  "description": "Transform unstructured project plans into standardized, well-formatted todo issues in Markdown.",
+  "author": "Kurt Mitchell",
+  "license": "MIT",
+  "files": {
+    "SKILL.md": "Main skill documentation and workflow guide"
+  }
+}

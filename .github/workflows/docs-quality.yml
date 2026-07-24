@@ -1,0 +1,24 @@
+name: Docs Quality
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  docs-quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Markdown lint
+        shell: pwsh
+        run: ./scripts/lint-markdown.ps1
+
+      - name: Markdown link check
+        shell: pwsh
+        run: ./scripts/check-markdown-links.ps1

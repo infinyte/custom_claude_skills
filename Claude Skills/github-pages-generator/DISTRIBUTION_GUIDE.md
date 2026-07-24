@@ -39,7 +39,7 @@ github-pages-generator/
 ```
 ├── CHANGELOG.md                          # Version history
 ├── README.md                             # (Generated from demo)
-└── COMPLETION_SUMMARY.md                 # Package summary
+└── archive/COMPLETION_SUMMARY.md         # Historical package summary
 ```
 
 ---
